@@ -4,8 +4,10 @@ import tensorflow.compat.v1 as tf
 
 
 def readWords(filename: str) -> list:
+	tokens = ['<eos>']
 	f = tf.io.gfile.GFile(filename, "r")
-	return f.read().replace("\n", "<eos>").split()
+	tokens.extend(f.read().replace("\n", "<eos>").split()[:-1])
+	return tokens
 
 
 def buildVocab(filename='ptbdataset/ptb.train.txt') -> dict:
