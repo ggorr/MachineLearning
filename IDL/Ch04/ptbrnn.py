@@ -30,22 +30,25 @@ def startRnn(epochs=10, saveResult=True):
 	testBatchLen = winSz * testNumWin
 
 	inp = tf.placeholder(tf.int32, shape=[batchSz, winSz])
-	ans = tf.placeholder(tf.int32, shape=[batchSz * winSz])
+	# ans = tf.placeholder(tf.int32, shape=[batchSz * winSz])
+	ans = tf.placeholder(tf.int32, shape=[batchSz, winSz])
 
 	E = tf.Variable(tf.random_normal([vocabSz, embedSz], stddev=0.1))
 	embed = tf.nn.embedding_lookup(E, inp)
 
-	rnn = BasicRNNCell(rnnSz)
+	rnn = BasicRNNCell(rnnSz, activation='relu')
 	initialState = rnn.zero_state(batchSz, tf.float32)
 	output, nextState = tf.nn.dynamic_rnn(rnn, embed, initial_state=initialState)
-	output = tf.reshape(output, [batchSz * winSz, rnnSz])
+	# output = tf.reshape(output, [batchSz * winSz, rnnSz])
 
 	W = tf.Variable(tf.random_normal([rnnSz, vocabSz], stddev=.1))
 	B = tf.Variable(tf.random_normal([vocabSz], stddev=.1))
-	logits = tf.matmul(output, W) + B
+	# logits = tf.matmul(output, W) + B
+	logits = tf.tensordot(output, W, [[2], [0]]) + B
 
 	ents = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=ans)
 	loss = tf.reduce_sum(ents)
+	# print(loss.shape)
 	train = tf.train.GradientDescentOptimizer(learnRate).minimize(loss)
 
 	trainPerp = np.zeros(epochs, dtype=np.float32)
@@ -57,21 +60,23 @@ def startRnn(epochs=10, saveResult=True):
 		print('epoch:', end=' ')
 		while epoch < epochs:
 			win = 0
-			inState = sess.run(initialState)
-			testInState = sess.run(initialState)
-			# print(inState, testInState)
+			state = sess.run(initialState)
+			testState = sess.run(initialState)
+			# print(state, testState)
 			winStart, winEnd = 0, winSz
 			while win < numWin:
 				inInp = np.array([trainData[i * batchLen + winStart:i * batchLen + winEnd] for i in range(batchSz)])
-				inAns = np.reshape(np.array([[trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1]] for i in range(batchSz)]), batchSz * winSz)
-				_, inState, outLoss = sess.run([train, nextState, loss], {inp: inInp, ans: inAns, nextState: inState})
+				# inAns = np.reshape(np.array([trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1] for i in range(batchSz)]), batchSz * winSz)
+				inAns = np.array([trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1] for i in range(batchSz)])
+				_, state, outLoss = sess.run([train, nextState, loss], {inp: inInp, ans: inAns, nextState: state})
 				trainPerp[epoch] += outLoss
 				winStart, winEnd = winEnd, winEnd + winSz
 				win += 1
 				if win < testNumWin:
 					inInp = np.array([testData[i * testBatchLen + winStart:i * testBatchLen + winEnd] for i in range(batchSz)])
-					inAns = np.reshape(np.array([[testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1]] for i in range(batchSz)]), batchSz * winSz)
-					testInState, testOutLoss = sess.run([nextState, loss], {inp: inInp, ans: inAns, nextState: testInState})
+					# inAns = np.reshape(np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)]), batchSz * winSz)
+					inAns = np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)])
+					testState, testOutLoss = sess.run([nextState, loss], {inp: inInp, ans: inAns, nextState: testState})
 					testPerp[epoch] += testOutLoss
 			epoch += 1
 			print(epoch, end=' ')
@@ -109,19 +114,21 @@ def runMoreRnn(path=None, epochs=10, saveResult=True):
 	testBatchLen = winSz * testNumWin
 
 	inp = tf.placeholder(tf.int32, shape=[batchSz, winSz])
-	ans = tf.placeholder(tf.int32, shape=[batchSz * winSz])
+	# ans = tf.placeholder(tf.int32, shape=[batchSz * winSz])
+	ans = tf.placeholder(tf.int32, shape=[batchSz, winSz])
 
 	E = tf.Variable(tf.random_normal([vocabSz, embedSz], stddev=0.1))
 	embed = tf.nn.embedding_lookup(E, inp)
 
-	rnn = BasicRNNCell(rnnSz)
+	rnn = BasicRNNCell(rnnSz, activation='relu')
 	initialState = rnn.zero_state(batchSz, tf.float32)
 	output, nextState = tf.nn.dynamic_rnn(rnn, embed, initial_state=initialState)
-	output = tf.reshape(output, [batchSz * winSz, rnnSz])
+	# output = tf.reshape(output, [batchSz * winSz, rnnSz])
 
 	W = tf.Variable(tf.random_normal([rnnSz, vocabSz], stddev=.1))
 	B = tf.Variable(tf.random_normal([vocabSz], stddev=.1))
-	logits = tf.matmul(output, W) + B
+	# logits = tf.matmul(output, W) + B
+	logits = tf.tensordot(output, W, [[2], [0]]) + B
 
 	ents = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=ans)
 	loss = tf.reduce_sum(ents)
@@ -139,21 +146,23 @@ def runMoreRnn(path=None, epochs=10, saveResult=True):
 		while epoch < epochs:
 			epoch += 1
 			win = 0
-			inState = sess.run(initialState)
-			testInState = sess.run(initialState)
-			# print(inState, testInState)
+			state = sess.run(initialState)
+			testState = sess.run(initialState)
+			# print(state, testState)
 			winStart, winEnd = 0, winSz
 			while win < numWin:
 				inInp = np.array([trainData[i * batchLen + winStart:i * batchLen + winEnd] for i in range(batchSz)])
-				inAns = np.reshape(np.array([[trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1]] for i in range(batchSz)]), batchSz * winSz)
-				_, inState, outLoss = sess.run([train, nextState, loss], {inp: inInp, ans: inAns, nextState: inState})
+				# inAns = np.reshape(np.array([trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1] for i in range(batchSz)]), batchSz * winSz)
+				inAns = np.array([trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1] for i in range(batchSz)])
+				_, state, outLoss = sess.run([train, nextState, loss], {inp: inInp, ans: inAns, nextState: state})
 				trainPerp[epoch] += outLoss
 				winStart, winEnd = winEnd, winEnd + winSz
 				win += 1
 				if win < testNumWin:
 					inInp = np.array([testData[i * testBatchLen + winStart:i * testBatchLen + winEnd] for i in range(batchSz)])
-					inAns = np.reshape(np.array([[testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1]] for i in range(batchSz)]), batchSz * winSz)
-					testInState, testOutLoss = sess.run([nextState, loss], {inp: inInp, ans: inAns, nextState: testInState})
+					# inAns = np.reshape(np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)]), batchSz * winSz)
+					inAns = np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)])
+					testState, testOutLoss = sess.run([nextState, loss], {inp: inInp, ans: inAns, nextState: testState})
 					testPerp[epoch] += testOutLoss
 			print(epoch + info['epochs'], end=' ')
 		trainPerp[1:] = np.exp(trainPerp[1:] / (trainData.shape[0] // (batchSz * batchLen) * (batchSz * batchLen)))
@@ -172,6 +181,6 @@ def runMoreRnn(path=None, epochs=10, saveResult=True):
 
 if __name__ == '__main__':
 	# startRnn(epochs=1, saveResult=False)
-	startRnn(epochs=10)
-	# runMoreRnn(epochs=10)
+	# startRnn(epochs=1)
+	runMoreRnn(epochs=1)
 # cosSimTable(['under', 'above', 'the', 'a', 'recalls', 'says', 'rules', 'laws', 'computer', 'machine'], 'rnn')
