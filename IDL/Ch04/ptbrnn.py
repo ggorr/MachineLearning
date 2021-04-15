@@ -70,14 +70,14 @@ def startRnn(epochs=10, saveResult=True):
 				inAns = np.array([trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1] for i in range(batchSz)])
 				_, state, outLoss = sess.run([train, nextState, loss], {inp: inInp, ans: inAns, nextState: state})
 				trainPerp[epoch] += outLoss
-				winStart, winEnd = winEnd, winEnd + winSz
-				win += 1
 				if win < testNumWin:
 					inInp = np.array([testData[i * testBatchLen + winStart:i * testBatchLen + winEnd] for i in range(batchSz)])
 					# inAns = np.reshape(np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)]), batchSz * winSz)
 					inAns = np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)])
 					testState, testOutLoss = sess.run([nextState, loss], {inp: inInp, ans: inAns, nextState: testState})
 					testPerp[epoch] += testOutLoss
+				winStart, winEnd = winEnd, winEnd + winSz
+				win += 1
 			epoch += 1
 			print(epoch, end=' ')
 		trainPerp = np.exp(trainPerp / (trainData.shape[0] // (batchSz * batchLen) * (batchSz * batchLen)))
@@ -156,14 +156,14 @@ def runMoreRnn(path=None, epochs=10, saveResult=True):
 				inAns = np.array([trainData[i * batchLen + winStart + 1: i * batchLen + winEnd + 1] for i in range(batchSz)])
 				_, state, outLoss = sess.run([train, nextState, loss], {inp: inInp, ans: inAns, nextState: state})
 				trainPerp[epoch] += outLoss
-				winStart, winEnd = winEnd, winEnd + winSz
-				win += 1
 				if win < testNumWin:
 					inInp = np.array([testData[i * testBatchLen + winStart:i * testBatchLen + winEnd] for i in range(batchSz)])
 					# inAns = np.reshape(np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)]), batchSz * winSz)
 					inAns = np.array([testData[i * testBatchLen + winStart + 1: i * testBatchLen + winEnd + 1] for i in range(batchSz)])
 					testState, testOutLoss = sess.run([nextState, loss], {inp: inInp, ans: inAns, nextState: testState})
 					testPerp[epoch] += testOutLoss
+				winStart, winEnd = winEnd, winEnd + winSz
+				win += 1
 			print(epoch + info['epochs'], end=' ')
 		trainPerp[1:] = np.exp(trainPerp[1:] / (trainData.shape[0] // (batchSz * batchLen) * (batchSz * batchLen)))
 		testPerp[1:] = np.exp(testPerp[1:] / (testData.shape[0] // (batchSz * testBatchLen) * (batchSz * testBatchLen)))
@@ -182,5 +182,5 @@ def runMoreRnn(path=None, epochs=10, saveResult=True):
 if __name__ == '__main__':
 	# startRnn(epochs=1, saveResult=False)
 	# startRnn(epochs=1)
-	runMoreRnn(epochs=1)
+	runMoreRnn(epochs=5)
 # cosSimTable(['under', 'above', 'the', 'a', 'recalls', 'says', 'rules', 'laws', 'computer', 'machine'], 'rnn')
