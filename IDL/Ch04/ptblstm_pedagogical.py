@@ -172,6 +172,6 @@ def runMoreLstm(path=None, epochs=10, saveResult=True):
 
 if __name__ == '__main__':
 	# startLstm(epochs=1, saveResult=False)
-	# startLstm(epochs=1)
-	runMoreLstm(epochs=1)
+	# startLstm(epochs=10)
+	runMoreLstm(epochs=10)
 # cosSimTable(['under', 'above', 'the', 'a', 'recalls', 'says', 'rules', 'laws', 'computer', 'machine'], 'lstm_ped')
